@@ -1,0 +1,10 @@
+# System files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE and local settings
+.vscode/
+.idea/
+*.suo
+*.user
