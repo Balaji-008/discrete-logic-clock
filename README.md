@@ -28,61 +28,61 @@
 
 ```mermaid
 graph TD
-    %% Power Delivery Network
-    subgraph Power["Power Delivery Network (PDN)"]
+    %% Step 1: Power
+    subgraph PowerStage["1. Power Delivery Network"]
         USB["USB 5V Input"] --> TP4056["TP4056 Charger Module"]
-        TP4056 --> LiIon["1200mAh Li-ion Battery (3.7V)"]
-        LiIon --> Boost["MT3608 Boost Converter (3.7V to 5.0V)"]
-        Boost --> VCC["Rigid +5.0V VCC Rail"]
+        TP4056 --> LiIon["1200mAh Li-ion Cell"]
+        LiIon --> Boost["MT3608 Boost Converter"]
+        Boost --> VCC["+5.0V VCC Rail"]
     end
 
-    %% Timebase
-    subgraph Timebase["Precision Timebase Generator"]
-        NE555["NE555 Astable Multivibrator<br>(Tuned via 100kΩ Potentiometer)"] -->|1Hz Clock Pulse| SecUnits
+    %% Step 2: Timebase
+    subgraph TimebaseStage["2. Precision 1Hz Timebase"]
+        NE555["NE555 Astable Oscillator<br>(100kΩ Pot Tuned)"]
     end
 
-    %% Seconds Counting Stage
-    subgraph Seconds["Seconds Counting Stage (Modulo-60 Reset)"]
-        SecUnits["Seconds Units Counter<br>(CD4026BE)"] -->|"Carry-Out (Pin 5)"| SecTens["Seconds Tens Counter<br>(CD4026BE)"]
-        SecUnits -->|Display Segment Pins| DispSecU["SSD (Units)"]
-        SecTens -->|Display Segment Pins| DispSecT["SSD (Tens)"]
-        
-        SecTens -->|Q-Outputs| SecAND["LS7411 AND Gate (MOD-60 detection)"]
-        SecUnits -->|Q-Outputs| SecAND
-        SecAND -->|Instant Reset Pulse| ResetSec["Reset Pins (Pin 15) of Sec Counters"]
-        ResetSec -->|Resets Stage to 00| SecUnits
-        ResetSec -->|Resets Stage to 00| SecTens
+    VCC --> NE555
+
+    %% Step 3: Seconds
+    subgraph SecStage["3. Seconds Stage (MOD-60)"]
+        SecU["CD4026 Units Counter"] -->|Carry-Out| SecT["CD4026 Tens Counter"]
+        SecT -->|Q-Outputs| SecAND["LS7411 AND Gate"]
+        SecAND -->|"Reset at count 60"| SecReset["Reset Both Sec Counters to 00"]
     end
 
-    %% Minutes Counting Stage
-    subgraph Minutes["Minutes Counting Stage (Modulo-60 Reset)"]
-        MinUnits["Minutes Units Counter<br>(CD4026BE)"] -->|"Carry-Out (Pin 5)"| MinTens["Minutes Tens Counter<br>(CD4026BE)"]
-        MinUnits -->|Display Segment Pins| DispMinU["SSD (Units)"]
-        MinTens -->|Display Segment Pins| DispMinT["SSD (Tens)"]
-        
-        MinTens -->|Q-Outputs| MinAND["LS7411 AND Gate (MOD-60 detection)"]
-        MinUnits -->|Q-Outputs| MinAND
-        MinAND -->|Instant Reset Pulse| ResetMin["Reset Pins (Pin 15) of Min Counters"]
-        ResetMin -->|Resets Stage to 00| MinUnits
-        ResetMin -->|Resets Stage to 00| MinTens
+    NE555 -->|1Hz Clock| SecU
+
+    %% Step 4: Minutes
+    subgraph MinStage["4. Minutes Stage (MOD-60)"]
+        MinU["CD4026 Units Counter"] -->|Carry-Out| MinT["CD4026 Tens Counter"]
+        MinT -->|Q-Outputs| MinAND["LS7411 AND Gate"]
+        MinAND -->|"Reset at count 60"| MinReset["Reset Both Min Counters to 00"]
     end
 
-    %% Hours Counting Stage
-    subgraph Hours["Hours Counting Stage (Modulo-12/24 Reset)"]
-        HrUnits["Hours Units Counter<br>(CD4026BE)"] -->|"Carry-Out (Pin 5)"| HrTens["Hours Tens Counter<br>(CD4026BE)"]
-        HrUnits -->|Display Segment Pins| DispHrU["SSD (Units)"]
-        HrTens -->|Display Segment Pins| DispHrT["SSD (Tens)"]
-        
-        HrTens -->|Q-Outputs| HrAND["LS7411 AND Gate (MOD-12/24 detection)"]
-        HrUnits -->|Q-Outputs| HrAND
-        HrAND -->|Instant Reset Pulse| ResetHr["Reset Pins (Pin 15) of Hr Counters"]
-        ResetHr -->|Resets Stage to 00/01| HrUnits
-        ResetHr -->|Resets Stage to 00/01| HrTens
+    SecReset -->|Clock Pulse| MinU
+
+    %% Step 5: Hours
+    subgraph HrStage["5. Hours Stage (MOD-12/24)"]
+        HrU["CD4026 Units Counter"] -->|Carry-Out| HrT["CD4026 Tens Counter"]
+        HrT -->|Q-Outputs| HrAND["LS7411 AND Gate"]
+        HrAND -->|"Reset at count 12 or 24"| HrReset["Reset Both Hr Counters"]
     end
 
-    %% Clock Interstage Bridging
-    ResetSec -->|Trigger Clock| MinUnits
-    ResetMin -->|Trigger Clock| HrUnits
+    MinReset -->|Clock Pulse| HrU
+
+    %% Step 6: Display
+    subgraph DisplayStage["6. 7-Segment Display Output (HH:MM:SS)"]
+        DispSec["Seconds Display (2 digits)"]
+        DispMin["Minutes Display (2 digits)"]
+        DispHr["Hours Display (2 digits)"]
+    end
+
+    SecU -->|Segment Pins| DispSec
+    SecT -->|Segment Pins| DispSec
+    MinU -->|Segment Pins| DispMin
+    MinT -->|Segment Pins| DispMin
+    HrU -->|Segment Pins| DispHr
+    HrT -->|Segment Pins| DispHr
 ```
 
 ---
