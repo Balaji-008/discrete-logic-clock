@@ -161,15 +161,10 @@ During design implementation and hardware testing on the perfboard, several crit
 *   **Cause:** The manual, dense point-to-point routing of 42 display segment lines and carry pins led to high thermal load and close proximity soldering.
 *   **Solution:** Cleaned bridges using desoldering wick and re-soldered cold joints at a higher iron temperature to ensure clean, durable connections.
 
-### 5. Hours Button-Set RC Circuit Failure
-*   **Problem:** Unable to set the hours manually using a debounced push button like the minutes segment.
-*   **Cause:** The RC debounce filter circuit was not discharging properly, preventing a clean transition edge.
-*   **Solution:** Decoupled the set-hours button line and relied on direct clock transitions or reset sweeps.
-
 ---
 
 ## 👤 Author
 **Balaji Rayudu S**  
-B.Tech Electronics & Computers Engineering, Semester IV  
+B.Tech Electronics & Computers Engineering  
 Amrita Vishwa Vidyapeetham, Bengaluru  
 
